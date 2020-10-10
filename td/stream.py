@@ -12,9 +12,9 @@ from typing import Union
 
 import websockets
 
-from td.fields import CSV_FIELD_KEYS
-from td.fields import CSV_FIELD_KEYS_LEVEL_2
-from td.fields import STREAM_FIELD_IDS
+from td.enums import CSV_FIELD_KEYS
+from td.enums import CSV_FIELD_KEYS_LEVEL_2
+from td.enums import STREAM_FIELD_IDS
 
 
 class TDStreamerClient():
@@ -636,7 +636,12 @@ class TDStreamerClient():
         # If we are connected then login.
         if is_connected:
             await self._send_message(login_request)
-            return self.connection
+            while True:
+                response = await self._receive_message(return_value=True)
+                responses = response.get('response')
+                for r in responses:
+                    if r.get('service') == 'ADMIN' and r.get('command') == 'LOGIN':
+                        return self.connection
 
     async def _check_connection(self) -> bool:
         """Determines if we have an active connection
